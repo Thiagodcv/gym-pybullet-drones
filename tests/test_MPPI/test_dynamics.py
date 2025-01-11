@@ -35,3 +35,20 @@ class TestDynamics(TestCase):
             np.linalg.norm(dynamics.prop_body_coords[2, :] - np.array([-0.028, 0.028, 0.0])) < epsilon)
         self.assertTrue(
             np.linalg.norm(dynamics.prop_body_coords[3, :] - np.array([0.028, 0.028, 0.0])) < epsilon)
+
+    def test_quaternion_to_rotation_matrix(self):
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        theta = np.pi
+        x = np.array([1., 0., 0.])
+        y = np.array([0., 1., 0.])
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+
+        q[0] = np.cos(theta/2)
+        q[1:4] = np.sin(theta/2)*z
+        R = dynamics.quaternion_to_rotation_matrix(q)
+
+        epsilon = 1e-5
+        self.assertTrue(np.linalg.norm(y - R @ x) < epsilon)

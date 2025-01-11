@@ -121,7 +121,7 @@ class DroneDynamics(object):
             the 3x3 rotation matrix.
         """
         s = q[0]
-        v = q[1:3]
+        v = q[1:4]
 
         R = np.zeros((3, 3))
         R[0, :] = 1 - 2*v[1]**2 - 2*v[2]**2, 2*v[0]*v[1] - 2*s*v[2], 2*v[0]*v[2] + 2*s*v[1]
