@@ -80,3 +80,20 @@ class DroneDynamics(object):
             return np.fromstring(urdf_tree[6][0][0].attrib['xyz'], sep=" ")
         elif parameter_name == 'prop3_body_xyz':
             return np.fromstring(urdf_tree[8][0][0].attrib['xyz'], sep=" ")
+
+    def compute_dynamics(self, x, v, q, w):
+        """
+        Computes the continuous-time rigid body dynamics function evaluated at a (x, v, q, w) tuple.
+
+        Parameters
+        ----------
+        x : ndarray
+            the current position of the drone in the global frame.
+        v : ndarray
+            the current velocity of the drone in the global frame.
+        q : ndarray
+            the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+        w : ndarray
+            angular momentum of the drone's body frame in the global frame.
+        """
+        pass
