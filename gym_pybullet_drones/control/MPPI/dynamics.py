@@ -93,7 +93,38 @@ class DroneDynamics(object):
             the current velocity of the drone in the global frame.
         q : ndarray
             the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            Of the form q = [s, v] where s is the scalar, v is the vector.
         w : ndarray
             angular momentum of the drone's body frame in the global frame.
+
+        Returns
+        -------
+        ndarray
+            the time derivative of the state.
         """
         pass
+
+    @staticmethod
+    def quaternion_to_rotation_matrix(q):
+        """
+        Computes the rotation matrix corresponding to a given unit quaternion.
+
+        Parameters
+        ----------
+        q : ndarray
+            the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            Of the form q = [s, v] where s is the scalar, v is the vector.
+
+        Returns
+        -------
+        ndarray
+            the 3x3 rotation matrix.
+        """
+        s = q[0]
+        v = q[1:3]
+
+        R = np.zeros((3, 3))
+        R[0, :] = 1 - 2*v[1]**2 - 2*v[2]**2, 2*v[0]*v[1] - 2*s*v[2], 2*v[0]*v[2] + 2*s*v[1]
+        R[1, :] = 2*v[0]*v[1] + 2*s*v[2], 1 - 2*v[0]**2 - 2*v[2]**2, 2*v[1]*v[2] - 2*s*v[0]
+        R[2, :] = 2*v[0]*v[2] - 2*s*v[1], 2*v[1]*v[2] + 2*s*v[0], 1 - 2*v[0]**2 - 2*v[1]**2
+        return R
