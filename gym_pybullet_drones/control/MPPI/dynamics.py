@@ -28,7 +28,14 @@ class DroneDynamics(object):
         """float: The coefficient converting RPMs into thrust."""
         self.km = self._get_urdf_parameter('km')
         """float: The coefficient converting RPMs into torque."""
-        
+
+        # Body coordinates of propellers
+        self.prop_body_coords = np.zeros((4, 3))
+        self.prop_body_coords[0, :] = self._get_urdf_parameter('prop0_body_xyz')
+        self.prop_body_coords[1, :] = self._get_urdf_parameter('prop1_body_xyz')
+        self.prop_body_coords[2, :] = self._get_urdf_parameter('prop2_body_xyz')
+        self.prop_body_coords[3, :] = self._get_urdf_parameter('prop3_body_xyz')
+
     def _get_urdf_parameter(self, parameter_name: str):
         """
         Reads a parameter from a drone's URDF file.
@@ -65,3 +72,11 @@ class DroneDynamics(object):
         elif parameter_name == 'collision_z_offset':
             collision_shape_offsets = [float(s) for s in urdf_tree[1][2][0].attrib['xyz'].split(' ')]
             return collision_shape_offsets[2]
+        elif parameter_name == 'prop0_body_xyz':
+            return np.fromstring(urdf_tree[2][0][0].attrib['xyz'], sep=" ")
+        elif parameter_name == 'prop1_body_xyz':
+            return np.fromstring(urdf_tree[4][0][0].attrib['xyz'], sep=" ")
+        elif parameter_name == 'prop2_body_xyz':
+            return np.fromstring(urdf_tree[6][0][0].attrib['xyz'], sep=" ")
+        elif parameter_name == 'prop3_body_xyz':
+            return np.fromstring(urdf_tree[8][0][0].attrib['xyz'], sep=" ")
