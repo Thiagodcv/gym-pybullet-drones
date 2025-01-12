@@ -100,23 +100,37 @@ class DroneDynamics(object):
         Parameters
         ----------
         x : ndarray
-            the current position of the drone in the global frame.
+            The current position of the drone in the global frame.
         v : ndarray
-            the current velocity of the drone in the global frame.
+            The current velocity of the drone in the global frame.
         q : ndarray
-            the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            The unit quaternion representing the orientation of the drone's body frame relative to the global frame.
             Of the form q = [s, v] where s is the scalar, v is the vector.
         w : ndarray
-            angular momentum of the drone's body frame in the global frame.
+            Angular momentum of the drone's body frame in the global frame.
         u : ndarray
-            the current control input. Namely, the RPM of each propeller.
+            The current control input. Namely, the RPM of each propeller.
 
         Returns
         -------
         ndarray
-            the time derivative of the state.
+            The time derivative of the state (13 dimensional).
         """
-        pass
+        state_dot = np.zeros(13)
+
+        # Time derivative of global position
+        state_dot[0:3] = v
+
+        # Time derivative of global velocity
+        state_dot[3:6] = self.x_ddot(q, u)
+
+        # Time derivative of the quaternion (rotation from local to global frame)
+        state_dot[6:10] = self.q_dot(q, w)
+
+        # Time derivative of (global) angular velocity
+        state_dot[10:13] = self.w_dot(q, w, u)
+
+        return state_dot
 
     @staticmethod
     def quaternion_to_rotation_matrix(q):
