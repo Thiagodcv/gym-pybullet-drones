@@ -40,15 +40,27 @@ class TestDynamics(TestCase):
         model = DroneModel.CF2X
         dynamics = DroneDynamics(model)
 
-        theta = np.pi
         x = np.array([1., 0., 0.])
         y = np.array([0., 1., 0.])
         z = np.array([0., 0., 1.])
         q = np.zeros(4)
 
+        # Rotate around z axis by pi/2
+        theta = np.pi / 2
         q[0] = np.cos(theta/2)
         q[1:4] = np.sin(theta/2)*z
         R = dynamics.quaternion_to_rotation_matrix(q)
 
         epsilon = 1e-5
         self.assertTrue(np.linalg.norm(y - R @ x) < epsilon)
+        self.assertTrue(np.linalg.norm(-x - R @ y) < epsilon)
+        self.assertTrue(np.linalg.norm(z - R @ z) < epsilon)
+
+        # Rotate around x axis by pi
+        theta = np.pi
+        q[0] = np.cos(theta / 2)
+        q[1:4] = np.sin(theta / 2) * x
+        R = dynamics.quaternion_to_rotation_matrix(q)
+        self.assertTrue(np.linalg.norm(-y - R @ y) < epsilon)
+        self.assertTrue(np.linalg.norm(-z - R @ z) < epsilon)
+        self.assertTrue(np.linalg.norm(x - R @ x) < epsilon)
