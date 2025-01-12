@@ -194,7 +194,6 @@ class DroneDynamics(object):
 
     def w_dot(self, q, w, u):
         """
-        TODO: Finish testing
         Compute and angular acceleration of the rigid body in world space.
 
         Parameters
