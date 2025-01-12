@@ -182,3 +182,40 @@ class DroneDynamics(object):
         total_force_global = R @ total_force_local - np.array([0., 0., self.m * self.g])
 
         return total_force_global / self.m
+
+    def w_dot(self, q, w, u):
+        """
+        TODO: Finish implementing and testing
+        Compute and angular acceleration of the rigid body in world space.
+
+        Parameters
+        ----------
+        q : ndarray
+            the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            Of the form q = [s, v] where s is the scalar, v is the vector.
+        w : ndarray
+            angular momentum of the drone's body frame in the global frame.
+        u : ndarray
+            the current control input. Namely, the RPM of each propeller.
+
+        Returns
+        -------
+        ndarray
+            The time derivative of angular velocity w.
+        """
+        R = self.quaternion_to_rotation_matrix(q)
+
+        # Compute torque along x-y plane (in body frame)
+        torque_xy_local = np.zeros(3)
+        for i in range(4):
+            force_local = np.array([0., 0., self.kf * u[i]**2])
+            torque_xy_local += np.cross(self.prop_body_coords[i, :], force_local)
+        torque_xy_global = R @ torque_xy_local
+
+        # Compute torque along z axis (in body frame)
+        torque_z_local = np.zeros(3)
+        for i in range(4):
+            force_local = np.array([0., 0., self.kf * u[i]**2])
+            torque_xy_local += (-1)**(i+1) * force_local
+        torque_z_global = R @ torque_z_local
+        torque_global = torque_xy_global + torque_z_global
