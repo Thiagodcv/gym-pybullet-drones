@@ -138,7 +138,7 @@ class TestDynamics(TestCase):
         self.assertTrue(x_ddot[1] == 0)
         self.assertTrue(x_ddot[2] > -9.8 and x_ddot[2] < -9.7)
 
-    def test_w_dot(self):
+    def test_w_dot_xy_plane(self):
         """
         This test focuses on the torque generated along the xy-plane, while torque along z-axis is zero.
         """
@@ -166,3 +166,44 @@ class TestDynamics(TestCase):
         self.assertTrue(w_dot[0] < 0)
         self.assertTrue(np.abs(w_dot[1]) < tol)
         self.assertTrue(np.abs(w_dot[2]) < tol)
+
+    def test_w_dot_zaxis(self):
+        """
+        This test focuses on the torque generated along the z-axis (yaw), while torque along the xy-plane is zero.
+        """
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        # Compute quaternion which represents pi/2 rotation around z-axis.
+        theta = -np.pi / 2
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+        q[0] = np.cos(theta/2)
+        q[1:4] = np.sin(theta/ 2) * z
+
+        # Angular velocity which represents drone not spinning along any axis.
+        w = np.array([0., 0., 0.])
+
+        # Input is nonzero only for propellers 1 and 3 which causes drone to spin along z-axis (counter-clockwise)
+        u = 1000 * np.array([0., 1., 0., 1.])
+
+        # Angular acceleration should have positive z part and zero all other parts.
+        w_dot = dynamics.w_dot(q, w, u)
+
+        tol = 1e-10
+        # print(w_dot)
+        self.assertTrue(np.abs(w_dot[0]) < tol)
+        self.assertTrue(np.abs(w_dot[1]) < tol)
+        self.assertTrue(w_dot[2] > 0)
+
+        # Input is nonzero only for propellers 0 and 2 which causes drone to spin along z-axis (clockwise)
+        u = 1000 * np.array([1., 0., 1., 0.])
+
+        # Angular acceleration should have negative z part and zero all other parts.
+        w_dot = dynamics.w_dot(q, w, u)
+
+        tol = 1e-10
+        # print(w_dot)
+        self.assertTrue(np.abs(w_dot[0]) < tol)
+        self.assertTrue(np.abs(w_dot[1]) < tol)
+        self.assertTrue(w_dot[2] < 0)
