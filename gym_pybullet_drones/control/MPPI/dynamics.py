@@ -31,6 +31,7 @@ class DroneDynamics(object):
         self.km = self._get_urdf_parameter('km')
         """float: The coefficient converting RPMs into torque."""
 
+        self.g = g
         # Body coordinates of propellers
         self.prop_body_coords = np.zeros((4, 3))
         self.prop_body_coords[0, :] = self._get_urdf_parameter('prop0_body_xyz')
@@ -83,7 +84,7 @@ class DroneDynamics(object):
         elif parameter_name == 'prop3_body_xyz':
             return np.fromstring(urdf_tree[8][0][0].attrib['xyz'], sep=" ")
 
-    def compute_dynamics(self, x, v, q, w):
+    def compute_dynamics(self, x, v, q, w, u):
         """
         Computes the continuous-time rigid body dynamics function evaluated at a (x, v, q, w) tuple.
 
@@ -98,6 +99,8 @@ class DroneDynamics(object):
             Of the form q = [s, v] where s is the scalar, v is the vector.
         w : ndarray
             angular momentum of the drone's body frame in the global frame.
+        u : ndarray
+            the current control input. Namely, the RPM of each propeller.
 
         Returns
         -------
@@ -155,3 +158,27 @@ class DroneDynamics(object):
         q_result[0] = s1*s2 - v1.T @ v2
         q_result[1:4] = s1*v2 + s2*v1 + np.cross(v1, v2)
         return q_result
+
+    def x_ddot(self, q, u):
+        """
+        Compute linear acceleration of the rigid body in world space.
+
+        Parameters
+        ----------
+        q : ndarray
+            the unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            Of the form q = [s, v] where s is the scalar, v is the vector.
+        u : ndarray
+            the current control input. Namely, the RPM of each propeller.
+
+        Returns
+        -------
+        ndarray
+        """
+        f_vec = self.kf * u**2  # vector of forces (i.e. thrust) as a result of propeller RPM
+        R = self.quaternion_to_rotation_matrix(q)
+
+        total_force_local = np.array([0., 0., np.sum(f_vec)])
+        total_force_global = R @ total_force_local - np.array([0., 0., self.m * self.g])
+
+        return total_force_global / self.m
