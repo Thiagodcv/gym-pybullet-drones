@@ -230,3 +230,46 @@ class TestDynamics(TestCase):
         self.assertTrue(rot_vec[0] > 0)
         self.assertTrue(rot_vec[1] > 0)
         self.assertTrue(np.abs(rot_vec[2]) < 1e-5)
+
+    def test_compute_dynamics(self):
+        """
+        TODO: Come back to this test later if any issues crop up.
+        Ensures compute_dynamics runs without crashing and leads to intuitive results.
+        """
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        # Compute quaternion which represents pi/2 rotation around z-axis.
+        theta = np.pi / 2
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+        q[0] = np.cos(theta / 2)
+        q[1:4] = np.sin(theta / 2) * z
+
+        # Angular velocity which represents drone spinning counter-clockwise along z-axis
+        w = np.array([0., 0., 1])
+
+        # Only propellers 0 and 2 spin causing drone to rotate clockwise
+        u = 1000 * np.array([1., 0., 1., 0.])
+
+        # Current position at (1, 1, 1) in global coords
+        x = np.ones(3)
+
+        # Current velocty is upwards
+        v = np.array([0., 0., 2.])
+
+        # Get state_dot
+        state_dot1 = dynamics.compute_dynamics(v, q, w, u)
+        print(state_dot1)
+
+        state = np.zeros(13)
+        state[0:3] = x
+        state[3:6] = v
+        state[6:10] = q
+        state[10:13] = w
+
+        state_dot2 = dynamics.state_dot(state, u)
+        print(state_dot2)
+
+        tol = 1e-7
+        self.assertTrue(np.linalg.norm(state_dot1 - state_dot2) < tol)

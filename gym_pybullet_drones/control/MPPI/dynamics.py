@@ -93,14 +93,33 @@ class DroneDynamics(object):
         elif parameter_name == 'prop3_body_xyz':
             return np.fromstring(urdf_tree[8][0][0].attrib['xyz'], sep=" ")
 
-    def compute_dynamics(self, x, v, q, w, u):
+    def state_dot(self, state, u):
+        """
+        Computes the time derivative of the state vector using the dynamics function.
+
+        Parameters
+        ----------
+        state : ndarray
+            The 13-dimensional state vector.
+        u : ndarray
+            The 4-dimensional control input. Namely, the RPM of each propeller.
+
+        Returns
+        -------
+        ndarray
+            The time derivative of the state vector.
+        """
+        v = state[3:6]
+        q = state[6:10]
+        w = state[10:13]
+        return self.compute_dynamics(v, q, w, u)
+
+    def compute_dynamics(self, v, q, w, u):
         """
         Computes the continuous-time rigid body dynamics function evaluated at a (x, v, q, w) tuple.
 
         Parameters
         ----------
-        x : ndarray
-            The current position of the drone in the global frame.
         v : ndarray
             The current velocity of the drone in the global frame.
         q : ndarray
