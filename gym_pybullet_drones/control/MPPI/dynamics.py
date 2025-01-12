@@ -39,6 +39,15 @@ class DroneDynamics(object):
         self.prop_body_coords[2, :] = self._get_urdf_parameter('prop2_body_xyz')
         self.prop_body_coords[3, :] = self._get_urdf_parameter('prop3_body_xyz')
 
+        # Define inertia matrix
+        ixx = self._get_urdf_parameter('ixx')
+        iyy = self._get_urdf_parameter('iyy')
+        izz = self._get_urdf_parameter('izz')
+        self.I_body = np.zeros((3, 3))
+        self.I_body[0] = ixx
+        self.I_body[1] = iyy
+        self.I_body[2] = izz
+
     def _get_urdf_parameter(self, parameter_name: str):
         """
         Reads a parameter from a drone's URDF file.
@@ -185,7 +194,7 @@ class DroneDynamics(object):
 
     def w_dot(self, q, w, u):
         """
-        TODO: Finish implementing and testing
+        TODO: Finish testing
         Compute and angular acceleration of the rigid body in world space.
 
         Parameters
@@ -221,3 +230,8 @@ class DroneDynamics(object):
 
         # Compute total torque
         torque_global = torque_xy_global + torque_z_global
+
+        # Global inertial matrix (2-39)
+        I = R @ self.I_body @ R.T
+        w_dot = np.linalg.inv(I) @ (torque_global - np.cross(w, I @ w))
+        return w_dot
