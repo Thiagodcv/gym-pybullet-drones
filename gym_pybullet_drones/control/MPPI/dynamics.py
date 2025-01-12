@@ -194,7 +194,7 @@ class DroneDynamics(object):
 
     def w_dot(self, q, w, u):
         """
-        Compute and angular acceleration of the rigid body in world space.
+        Compute the angular acceleration of the rigid body in world space.
 
         Parameters
         ----------
@@ -234,3 +234,25 @@ class DroneDynamics(object):
         I = R @ self.I_body @ R.T
         w_dot = np.linalg.inv(I) @ (torque_global - np.cross(w, I @ w))
         return w_dot
+
+    def q_dot(self, q, w):
+        """
+        Compute the time derivative of the quaternion vector.
+
+        Parameters
+        ----------
+        q : ndarray
+            The unit quaternion representing the orientation of the drone's body frame relative to the global frame.
+            Of the form q = [s, v] where s is the scalar, v is the vector.
+        w : ndarray
+            Angular momentum of the drone's body frame in the global frame.
+
+        Returns
+        -------
+        ndarray
+            The time derivative of the quaternion vector.
+        """
+        w_quat = np.zeros(4)
+        w_quat[1:4] = w
+        q_dot = 0.5*self.quaternion_mult(w_quat, q)
+        return q_dot
