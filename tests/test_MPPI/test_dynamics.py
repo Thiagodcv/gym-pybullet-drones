@@ -92,3 +92,48 @@ class TestDynamics(TestCase):
 
         R_comp_from_quat = dynamics.quaternion_to_rotation_matrix(q_comp)
         self.assertTrue(np.linalg.norm(R_comp - R_comp_from_quat) < 1e-5)
+
+    def test_x_ddot(self):
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        x = np.array([1., 0., 0.])
+        y = np.array([0., 1., 0.])
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+
+        # Rotate around y axis (pitch downwards) by pi/2
+        theta = np.pi / 2
+        q[0] = np.cos(theta/2)
+        q[1:4] = np.sin(theta/2) * y
+        u = 1000*np.ones(4)
+
+        x_ddot = dynamics.x_ddot(q, u)
+        # print(x_ddot)
+        self.assertTrue(x_ddot[0] > 0)
+        self.assertTrue(x_ddot[1] == 0)
+        self.assertTrue(x_ddot[2] == -9.8)
+
+        # Rotate around x axis by -pi/2
+        theta = -np.pi / 2
+        q[0] = np.cos(theta / 2)
+        q[1:4] = np.sin(theta / 2) * x
+        u = 1000 * np.ones(4)
+
+        x_ddot = dynamics.x_ddot(q, u)
+        # print(x_ddot)
+        self.assertTrue(x_ddot[0] == 0)
+        self.assertTrue(x_ddot[1] > 0)
+        self.assertTrue(x_ddot[2] == -9.8)
+
+        # Rotate around z axis by pi
+        theta = np.pi
+        q[0] = np.cos(theta / 2)
+        q[1:4] = np.sin(theta / 2) * z
+        u = 1000 * np.ones(4)
+
+        x_ddot = dynamics.x_ddot(q, u)
+        # print(x_ddot)
+        self.assertTrue(x_ddot[0] == 0)
+        self.assertTrue(x_ddot[1] == 0)
+        self.assertTrue(x_ddot[2] > -9.8 and x_ddot[2] < -9.7)
