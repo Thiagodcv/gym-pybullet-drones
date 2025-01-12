@@ -44,9 +44,9 @@ class DroneDynamics(object):
         iyy = self._get_urdf_parameter('iyy')
         izz = self._get_urdf_parameter('izz')
         self.I_body = np.zeros((3, 3))
-        self.I_body[0] = ixx
-        self.I_body[1] = iyy
-        self.I_body[2] = izz
+        self.I_body[0, 0] = ixx
+        self.I_body[1, 1] = iyy
+        self.I_body[2, 2] = izz
 
     def _get_urdf_parameter(self, parameter_name: str):
         """

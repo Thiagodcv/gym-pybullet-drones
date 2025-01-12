@@ -137,3 +137,32 @@ class TestDynamics(TestCase):
         self.assertTrue(x_ddot[0] == 0)
         self.assertTrue(x_ddot[1] == 0)
         self.assertTrue(x_ddot[2] > -9.8 and x_ddot[2] < -9.7)
+
+    def test_w_dot(self):
+        """
+        This test focuses on the torque generated along the xy-plane, while torque along z-axis is zero.
+        """
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        # Compute quaternion which represents pi/2 rotation around z-axis.
+        theta = np.pi / 2
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+        q[0] = np.cos(theta/2)
+        q[1:4] = np.sin(theta/2) * z
+
+        # Angular velocity which represents drone spinning clockwise around z-axis.
+        w = np.array([0., 0., -0.05])
+
+        # Input is nonzero only for propellers 1 and 2 which causes drone to pitch downwards.
+        u = 1000*np.array([0., 1., 1., 0.])
+
+        # Angular acceleration should have negative x part and zero all other parts.
+        w_dot = dynamics.w_dot(q, w, u)
+
+        tol = 1e-10
+        # print(w_dot)
+        self.assertTrue(w_dot[0] < 0)
+        self.assertTrue(np.abs(w_dot[1]) < tol)
+        self.assertTrue(np.abs(w_dot[2]) < tol)
