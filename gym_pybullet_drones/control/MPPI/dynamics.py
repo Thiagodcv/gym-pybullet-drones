@@ -9,6 +9,8 @@ class DroneDynamics(object):
     """
     Implements 1st order nonlinear ODE which describes dynamics of a quadcopter.
     First implementation will focus on cf2x drone, and might be extended to other models later.
+
+    NOTE: in this class assume first element of any quaternion is its scalar.
     """
 
     def __init__(self, drone_model, g: float = 9.8):
@@ -128,3 +130,28 @@ class DroneDynamics(object):
         R[1, :] = 2*v[0]*v[1] + 2*s*v[2], 1 - 2*v[0]**2 - 2*v[2]**2, 2*v[1]*v[2] - 2*s*v[0]
         R[2, :] = 2*v[0]*v[2] - 2*s*v[1], 2*v[1]*v[2] + 2*s*v[0], 1 - 2*v[0]**2 - 2*v[1]**2
         return R
+
+    @staticmethod
+    def quaternion_mult(q1, q2):
+        """
+        Multiplies quaternions q1 and q2 like q1 * q2. Note that order matters here.
+
+        Parameters
+        ----------
+        q1, q2 : ndarray
+            two quaternions.
+
+        Returns
+        -------
+        ndarray
+            the resulting quaternion.
+        """
+        s1 = q1[0]
+        s2 = q2[0]
+        v1 = q1[1:4]
+        v2 = q2[1:4]
+
+        q_result = np.zeros(4)
+        q_result[0] = s1*s2 - v1.T @ v2
+        q_result[1:4] = s1*v2 + s2*v1 + np.cross(v1, v2)
+        return q_result
