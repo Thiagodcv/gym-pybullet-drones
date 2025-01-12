@@ -207,3 +207,26 @@ class TestDynamics(TestCase):
         self.assertTrue(np.abs(w_dot[0]) < tol)
         self.assertTrue(np.abs(w_dot[1]) < tol)
         self.assertTrue(w_dot[2] < 0)
+
+    def test_q_dot(self):
+        """
+        Ensures q_dot runs without crashing and leads to intuitive results.
+        """
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        q = np.array([1., 0., 0., 0.])  # Body frame initially equals global frame
+        w = np.array([0., 0., 1.])  # Rigid body spinning along its z-axis counter-clockwise
+        q_dot = dynamics.q_dot(q, w)
+        q2 = q + (1e-2)*q_dot  # Estimate quaternion after small interval of time
+        q2 = q2 / np.linalg.norm(q2)
+
+        R2 = dynamics.quaternion_to_rotation_matrix(q2)  # Rotation matrix at next timestep
+        x = np.array([1., 0., 0.])
+        rot_vec = R2 @ x
+
+        # Ensure x_axis in body frame rotated as expected
+        # print(rot_vec)
+        self.assertTrue(rot_vec[0] > 0)
+        self.assertTrue(rot_vec[1] > 0)
+        self.assertTrue(np.abs(rot_vec[2]) < 1e-5)
