@@ -218,4 +218,6 @@ class DroneDynamics(object):
             force_local = np.array([0., 0., self.kf * u[i]**2])
             torque_xy_local += (-1)**(i+1) * force_local
         torque_z_global = R @ torque_z_local
+
+        # Compute total torque
         torque_global = torque_xy_global + torque_z_global
