@@ -289,3 +289,31 @@ class DroneDynamics(object):
         w_quat[1:4] = w
         q_dot = 0.5*self.quaternion_mult(w_quat, q)
         return q_dot
+
+    def forward_euler(self, state_init, inputs, n, h=0.01):
+        """
+        Estimate the trajectory of the rigid body dynamics using a forward Euler approach.
+
+        Parameters
+        ---------
+        state_init : ndarray
+            The initial state of the system.
+        inputs : ndarray
+            The control input for each timestep t=0,1,...,n-1 in an (n+1, 4)-sized array.
+        n : Int
+            The number of time steps.
+        h : float, optional
+            The length of time between each time step.
+
+        Returns
+        -------
+        ndarray
+            The estimated trajectory of the system in an (n+1, 13)-sized array (the first row is state_init).
+        """
+        state_traj = np.zeros((n+1, 13))
+        state_traj[0, :] = state_init
+
+        for i in range(0, n):
+            state_traj[i+1, :] = state_traj[i, :] + h*self.state_dot(state_traj[i, :], inputs[i, :])
+
+        return state_traj
