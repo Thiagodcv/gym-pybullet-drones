@@ -322,6 +322,8 @@ class DroneDynamics(object):
         """
         Estimate the trajectory of the rigid body dynamics using a forward Euler approach.
 
+        NOTE: here we assume u(t + h/2) = u(t).
+
         Parameters
         ---------
         state_init : ndarray
