@@ -289,3 +289,71 @@ class DroneDynamics(object):
         w_quat[1:4] = w
         q_dot = 0.5*self.quaternion_mult(w_quat, q)
         return q_dot
+
+    def forward_euler(self, state_init, inputs, n, h=0.01):
+        """
+        Estimate the trajectory of the rigid body dynamics using a forward Euler approach.
+
+        Parameters
+        ---------
+        state_init : ndarray
+            The initial state of the system.
+        inputs : ndarray
+            The control input for each timestep t=0,1,...,n-1 in an (n+1, 4)-sized array.
+        n : Int
+            The number of time steps.
+        h : float, optional
+            The length of time between each time step.
+
+        Returns
+        -------
+        ndarray
+            The estimated trajectory of the system in an (n+1, 13)-sized array (the first row is state_init).
+        """
+        state_traj = np.zeros((n+1, 13))
+        state_traj[0, :] = state_init
+
+        for i in range(0, n):
+            state_traj[i+1, :] = state_traj[i, :] + h*self.state_dot(state_traj[i, :], inputs[i, :])
+
+        return state_traj
+
+    def rk4(self, state_init, inputs, n, h=0.01):
+        """
+        Estimate the trajectory of the rigid body dynamics using a forward Euler approach.
+
+        NOTE: here we assume u(t + h/2) = u(t).
+
+        Parameters
+        ---------
+        state_init : ndarray
+            The initial state of the system.
+        inputs : ndarray
+            The control input for each timestep t=0,1,...,n-1 in an (n+1, 4)-sized array.
+        n : Int
+            The number of time steps.
+        h : float, optional
+            The length of time between each time step.
+
+        Returns
+        -------
+        ndarray
+            The estimated trajectory of the system in an (n+1, 13)-sized array (the first row is state_init).
+        """
+        state_traj = np.zeros((n+1, 13))
+        state_traj[0, :] = state_init
+
+        for i in range(0, n):
+            state = state_traj[i, :]
+            u = inputs[i, :]
+
+            k1 = state
+            k2 = state + h/2*self.state_dot(k1, u)
+            k3 = state + h/2*self.state_dot(k2, u)
+            k4 = state + h*self.state_dot(k3, u)
+
+            state_traj[i + 1, :] = state + h/6*(self.state_dot(k1, u) +
+                                                2*self.state_dot(k2, u) +
+                                                2*self.state_dot(k3, u) +
+                                                self.state_dot(k4, u))
+        return state_traj
