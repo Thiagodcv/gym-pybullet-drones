@@ -273,3 +273,53 @@ class TestDynamics(TestCase):
 
         tol = 1e-7
         self.assertTrue(np.linalg.norm(state_dot1 - state_dot2) < tol)
+
+    def test_forward_euler(self):
+        """
+        Ensures forward_euler runs without crashing and leads to intuitive results.
+        """
+        model = DroneModel.CF2X
+        dynamics = DroneDynamics(model)
+
+        # Parameters for forward euler
+        h = 0.1
+        n = 10
+
+        # Compute quaternion which represents pi/2 rotation around z-axis.
+        theta = np.pi / 2
+        z = np.array([0., 0., 1.])
+        q = np.zeros(4)
+        q[0] = np.cos(theta / 2)
+        q[1:4] = np.sin(theta / 2) * z
+
+        # Angular velocity which represents zero spin
+        w = np.array([0., 0., 0.])
+
+        # Only propellers 0 and 2 spin slightly faster causing drone to rotate clockwise
+        P = np.sqrt(dynamics.m*dynamics.g/(4*dynamics.kf))
+        u = np.array([P*1.001, P, P*1.001, P])
+        inputs = np.vstack([u] * n)
+
+        # Current position at (1,1,1)
+        x = np.ones(3)
+
+        # Current velocity is zero
+        v = np.array([0., 0., 0.])
+
+        # Create state_init
+        state_init = np.zeros(13)
+        state_init[0:3] = x
+        state_init[3:6] = v
+        state_init[6:10] = q
+        state_init[10:13] = w
+
+        state_traj = dynamics.forward_euler(state_init, inputs, n, h=h)
+        x = np.array([1., 0., 0.])
+        for i in range(n):
+            print("------- iteration ", i, " -------")
+            print("xyz: ", state_traj[i, 0:3])
+            print("w: ", state_traj[i, 10:13])
+            q = state_traj[i, 6:10]
+            R = dynamics.quaternion_to_rotation_matrix(q)
+            print("R@X: ", R@x)
+        
